@@ -1,0 +1,88 @@
+#version 460 core
+ 
+#define N 256
+#define LENGTH	256
+#define GRAVITY 9.81
+#define PI	3.1415926535897932384626433832795
+  
+layout (binding = 0, rgba32f) uniform image2D imageIn; 
+layout (binding = 1, rg32f) uniform image2D imageOutHt;
+layout (binding = 2, rg32f) uniform image2D imageOutHtSx;
+layout (binding = 3, rg32f) uniform image2D imageOutHtSz;
+layout (binding = 4, rg32f) uniform image2D imageOutHtDx;
+layout (binding = 5, rg32f) uniform image2D imageOutHtDz;
+//layout (binding = 3, rg32f) uniform image2D WaveDirection;
+ 
+
+// 需要计算船舶和水的受力关系。
+
+uniform float totalTime;
+ 
+//使用布局限定符声明本地工作组大小为1*1*1
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+//复数乘法
+vec2 mulc(vec2 a, vec2 b)
+{
+	vec2 result;
+	
+	result.x = a.x * b.x - a.y * b.y;
+	result.y = a.x * b.y + b.x * a.y;
+	
+	return result;
+}
+ 
+void main(void)
+{
+	//通过gl_GlobalInvocationID来得知当前执行单元在全局工作组中的位置
+	ivec2 storePos = ivec2(int(gl_GlobalInvocationID.x), int(gl_GlobalInvocationID.y));
+	//ivec2 storePos_negative = ivec2(N - 1 - storePos.x, N - 1 - storePos.y);
+
+    float kx = PI * (2.0 * storePos.x - N) / LENGTH;
+    float kz = PI * (2.0 * storePos.y - N) / LENGTH;
+
+	//根据位置storePos在贴图中采样得到数据
+	vec2 h0 = imageLoad(imageIn, storePos).rg;
+	vec2 h0_negative = imageLoad(imageIn, storePos).ba;
+ 
+	vec2 waveDirection;
+	waveDirection.x = (float(-N) / 2.0 + gl_GlobalInvocationID.x) * (2.0 * PI / LENGTH);
+    waveDirection.y = (float(-N) / 2.0 + gl_GlobalInvocationID.y) * (2.0 * PI / LENGTH);
+ 
+	float w2k = GRAVITY * length(waveDirection);
+
+    float w_0 = 2.0f * PI / 200.0f;
+	float wktime =  floor(sqrt(w2k) / w_0) * w_0 * totalTime;
+ 
+	float cos_wktime = cos(wktime);
+	float sin_wktime = sin(wktime);
+
+    vec2 c0 = vec2(cos_wktime, sin_wktime);
+    vec2 c1 = vec2(cos_wktime, -sin_wktime);
+ 
+	vec2 ht;
+	ht = mulc(h0, c0) + mulc(h0_negative, c1);
+
+    //ht.x = (h0.x * cos_wktime - h0.y * sin_wktime) + (h0_negative.x * cos_wktime + h0_negative.y * sin_wktime); 
+	//ht.y = (h0.x * sin_wktime + h0.y * cos_wktime) + (-h0_negative.x * sin_wktime + h0_negative.y * cos_wktime); 
+	
+    vec2 ht_sx, ht_sz;
+    ht_sx = mulc(ht, vec2(0, kx));
+    ht_sz = mulc(ht, vec2(0, kz));
+
+    vec2 ht_dx, ht_dz;
+    float len = sqrt(kx * kx + kz * kz);
+    if (len < 0.00001) {
+        ht_dx = vec2(0,0);
+        ht_dz = vec2(0,0);
+    } else {
+        ht_dx = mulc(ht, vec2(0, -kx / len));
+        ht_dz = mulc(ht, vec2(0, -kz / len));
+    }
+    //将算出来的高度值存储到贴图当中
+	imageStore(imageOutHt, storePos, vec4(ht, 0.0, 0.0));
+    imageStore(imageOutHtSx, storePos, vec4(ht_sx, 0.0, 0.0));
+    imageStore(imageOutHtSz, storePos, vec4(ht_sz, 0.0, 0.0));
+    imageStore(imageOutHtDx, storePos, vec4(ht_dx, 0.0, 0.0));
+    imageStore(imageOutHtDz, storePos, vec4(ht_dz, 0.0, 0.0));
+}
