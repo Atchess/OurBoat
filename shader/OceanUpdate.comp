@@ -51,7 +51,7 @@ void main(void)
  
 	float w2k = GRAVITY * length(waveDirection);
 
-    float w_0 = 2.0f * PI / 200.0f;
+    float w_0 = 2.0 * PI / 200.0;
 	float wktime =  floor(sqrt(w2k) / w_0) * w_0 * totalTime;
  
 	float cos_wktime = cos(wktime);
@@ -63,9 +63,6 @@ void main(void)
 	vec2 ht;
 	ht = mulc(h0, c0) + mulc(h0_negative, c1);
 
-    //ht.x = (h0.x * cos_wktime - h0.y * sin_wktime) + (h0_negative.x * cos_wktime + h0_negative.y * sin_wktime); 
-	//ht.y = (h0.x * sin_wktime + h0.y * cos_wktime) + (-h0_negative.x * sin_wktime + h0_negative.y * cos_wktime); 
-	
     vec2 ht_sx, ht_sz;
     ht_sx = mulc(ht, vec2(0, kx));
     ht_sz = mulc(ht, vec2(0, kz));

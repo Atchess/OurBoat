@@ -28,7 +28,7 @@ private:
     GLuint *indices;                  // indicies for vertex buffer object
     GLuint indicesNum;             // number of indices to render
     GLuint verticesNum;
-    GLuint VAO, VBO, EBO, TBO;             // vertex buffer objects
+    GLuint VAO, VBO, EBO, TBO, FBO;             // vertex buffer objects
 
     GLuint textureH0, textureHt[3], textureNormal, textureIndices, texturePoint[2];  // store the result computed by compute shader
     GLuint textureHtSx[3], textureHtSz[3], textureHtDx[3], textureHtDz[3];

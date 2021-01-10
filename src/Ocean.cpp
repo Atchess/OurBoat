@@ -2,7 +2,7 @@
 
 GLfloat RandomUniform()
 {
-	return ((GLfloat)rand() / (GLfloat)RAND_MAX);
+	return ((GLfloat)rand() / RAND_MAX);
 }
  
 glm::vec2 RandomNormal()
@@ -18,7 +18,7 @@ glm::vec2 RandomNormal()
 }
 
 
-Ocean::Ocean(GLfloat N, GLfloat A, GLfloat length, vec2 windDirection) : g(9.80), N(N), A(A), length(length), windDirection(windDirection){
+Ocean::Ocean(GLfloat N, GLfloat A, GLfloat length, vec2 windDirection) : g(9.81), N(N), A(A), length(length), windDirection(windDirection){
     Init();
 }
 
@@ -27,16 +27,6 @@ Ocean::~Ocean()
 	delete[] vertices;
 	delete[] texCoords;
 	delete[] indices;
-}
-
-void Ocean::FourierButterflyShuffleFFTi(GLint* src, GLint N)
-{
-	for (int i = 0, j = 0; i < N; i++) {
-		if (i > j)
-			swap(src[i], src[j]);
-		for (int k = N >> 1; (j ^= 1) < 1; k >>= 1);
-	}
-	
 }
 
 GLfloat Ocean::PhillipsSpectrum(GLfloat A, GLfloat length, glm::vec2 wave, glm::vec2 wind)
@@ -59,7 +49,7 @@ GLfloat Ocean::PhillipsSpectrum(GLfloat A, GLfloat length, glm::vec2 wave, glm::
 }
 
 GLfloat Ocean::PhillipsSpectrum(int n, int m) {
-    vec2 k(M_PI * (2 * n - N) / length,M_PI * (2 * m - N) / length);
+    vec2 k(M_PI * (2 * n - N) / length, M_PI * (2 * m - N) / length);
     float k_length  = glm::length(k);
     if (k_length < 0.000001) return 0.0;
     
@@ -154,8 +144,6 @@ GLboolean Ocean::Init()
 	GLint vertexLocation = glGetAttribLocation(oceanShader->ID, "aPos");
     CreateGridPlane();
 
-	GLint i, k;
- 
 	GLfloat* h0Data;
  
 	GLfloat phillipsSpectrumValue;
@@ -181,8 +169,8 @@ GLboolean Ocean::Init()
 	}
 	//Phillips频谱计算出初始波形
 	//windDirection = glm::normalize(windDirection);
-	for (i = 0; i < N + 1; i++) {
-		for (k = 0; k < N + 1; k++) {
+	for (int i = 0; i < N + 1; i++) {
+		for (int k = 0; k < N + 1; k++) {
             int index = (i * (N + 1) + k) * 4;
 			phillipsSpectrumValue = PhillipsSpectrum(k, i);
 			glm::vec2 temp = RandomNormal();
@@ -416,6 +404,11 @@ GLboolean Ocean::Update(GLfloat time, glm::mat4 Model, glm::mat4 View, glm::mat4
 
 	glDispatchCompute(N, N, 1);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+	GLfloat data[(N + 1) * (N + 1) * 4];
+	glBindTexture(GL_TEXTURE_2D, texturePoint[1]);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, data);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
  	oceanShader->use();
     oceanShader->setFloat("hei_Lim", A);
