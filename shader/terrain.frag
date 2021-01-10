@@ -10,7 +10,7 @@ out vec4 FragColor;
 
 const vec3 ambient_color  = vec3(0.0, 0.65, 0.75);
 const vec3 diffuse_color  = vec3(0.5, 0.65, 0.75);
-const vec3 swallow=vec3(0.275,0.855,1.0);
+const vec3 swallow = vec3(0.275,0.855,1.0);
 const vec3 skyColor = vec3(0.65, 0.80, 0.95);
 
 uniform vec3 viewPos;
@@ -19,7 +19,7 @@ uniform vec3 viewPos;
 const vec3 SEA_BASE = vec3(0.1,0.19,0.22);
 const vec3 SEA_WATER_COLOR = vec3(0.8,0.9,0.6);
 
-vec3 sunPos=vec3(0,20,50);
+vec3 sunPos=vec3(0,50,100);
 
 float CalculateFresnel (vec3 I, vec3 N)
 {

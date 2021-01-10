@@ -405,10 +405,10 @@ GLboolean Ocean::Update(GLfloat time, glm::mat4 Model, glm::mat4 View, glm::mat4
 	glDispatchCompute(N, N, 1);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-	GLfloat data[(N + 1) * (N + 1) * 4];
-	glBindTexture(GL_TEXTURE_2D, texturePoint[1]);
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, data);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	//GLfloat data[(N + 1) * (N + 1) * 4];
+	//glBindTexture(GL_TEXTURE_2D, texturePoint[1]);
+	//glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, data);
+	//glBindTexture(GL_TEXTURE_2D, 0);
 
  	oceanShader->use();
     oceanShader->setFloat("hei_Lim", A);

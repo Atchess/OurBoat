@@ -1,6 +1,6 @@
 #version 460 core
  
-#define N 256
+#define N 2048
 #define PI	3.1415926535897932384626433832795
  
 uniform int processColumn;
@@ -14,7 +14,7 @@ layout (binding = 1, rg32f) uniform image2D imageOut;
 shared vec2 sharedStore[N];
  
 // as N = 512, so local size is 512/2 = 256. Processing two fields per invocation.
-layout (local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
  
 //复数乘法
 vec2 mulc(vec2 a, vec2 b)
@@ -42,7 +42,7 @@ int reverse(int i) {
 	int res  = 0;
 	for (int j = 0; j < steps; j++) {
 		if (((i >> j ) & 1 ) != 0) {
-			res = res | (1 << (steps - j -1));
+			res = res | (1 << (steps - j - 1));
 		}
 	}
 	return res;
@@ -56,8 +56,8 @@ void main(void)
 	ivec2 leftLoadPos;
 	ivec2 rightLoadPos;
  
-	int xIndex = int(gl_LocalInvocationID.x); //int(gl_GlobalInvocationID.x);
-	int yIndex = int(gl_GlobalInvocationID.y);
+	int xIndex = int(gl_LocalInvocationID.x);
+	int yIndex = int(gl_WorkGroupID.y);
  
 	int leftStoreIndex = 2 * xIndex;
 	int rightStoreIndex = 2 * xIndex + 1;
@@ -71,7 +71,7 @@ void main(void)
 
 
 	// 加载和存储位置取决于行或列。
-	if (processColumn == 0)
+	if (processColumn == 1)
 	{
 		leftLoadPos = ivec2(leftLoadIndex, yIndex);
 		rightLoadPos = ivec2(rightLoadIndex, yIndex);

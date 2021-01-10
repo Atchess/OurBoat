@@ -1,6 +1,6 @@
 #version 460 core
  
-#define N 256
+#define N 2048
 #define LENGTH	256.0
 
 #define LAMBDA -0.05

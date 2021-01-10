@@ -33,7 +33,7 @@ const GLuint SCR_WIDTH = 800;
 const GLuint SCR_HEIGHT = 600;
 
 // camera
-Camera camera(glm::vec3(0.0f, 10.0f, 0.0f));
+Camera camera(glm::vec3(0.0f, 5.0f, 0.0f));
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = false;
@@ -84,7 +84,7 @@ int main()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
 
-    Ocean ocean(256, 0.00002, 256, glm::vec2(64,32));
+    Ocean ocean(2048, 0.00002, 128, glm::vec2(64,32));
 
 	glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = camera.GetViewMatrix();
@@ -97,7 +97,7 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         printf("fps:%f\n", 1 / deltaTime);
-        Sleep(128);
+        //Sleep(128);
 
         processInput(window);
 
@@ -107,7 +107,7 @@ int main()
         view = camera.GetViewMatrix();
         projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         GLuint ReflectText;
-        ocean.Update(currentFrame, model, view, projection, CamPos, ReflectText);
+        ocean.Update(currentFrame/100, model, view, projection, CamPos, ReflectText);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
