@@ -70,33 +70,39 @@ GLfloat Ocean::PhillipsSpectrum(int n, int m) {
 }
 
 void Ocean::CreateGridPlane()
-{
-    verticesNum = (N + 1) * (N + 1);
-    indicesNum  = 6 * (N + 1) * (N + 1);
-    vertices = new GLfloat[verticesNum * 5];
+{	
+	VN = 2 * N;
+	// 计算用的数据
+	verticesNum = (N + 1) * (N + 1);
     vert = new GLfloat[verticesNum * 4];
 	texCoords = new GLfloat[verticesNum * 2];
-    indices  = new GLuint[indicesNum];
+    
+    verticesNum = (VN + 1) * (VN + 1);
+    indicesNum  = 6 * (VN + 1) * (VN + 1);
+    // 渲染用的数据
+	vertices = new GLfloat[verticesNum * 5];	
+	indices  = new GLuint[indicesNum];
     indicesNum = 0;
-    for (unsigned int i = 0; i < N; ++i) {
-        for (unsigned int j = 0; j < N; ++j) {
-            int index = i * (N + 1) + j;
+
+    for (unsigned int i = 0; i < VN; ++i) {
+        for (unsigned int j = 0; j < VN; ++j) {
+            int index = i * (VN + 1) + j;
             indices[indicesNum ++] = index;
-            indices[indicesNum ++] = index + N + 1;
-            indices[indicesNum ++] = index + N + 1 + 1;
+            indices[indicesNum ++] = index + VN + 1;
+            indices[indicesNum ++] = index + VN + 1 + 1;
             indices[indicesNum ++] = index;
-            indices[indicesNum ++] = index + N + 1 + 1;
+            indices[indicesNum ++] = index + VN + 1 + 1;
             indices[indicesNum ++] = index + 1;
         }
     }
-    for (int i = 0; i < N + 1; ++i) {
-        for (int j = 0; j < N + 1; ++j) {
-            int pos = 5 * (i * (N + 1) + j);
-            vertices[pos + 0] = (i - N / 2.0) * length / N;
+    for (int i = 0; i < VN + 1; ++i) {
+        for (int j = 0; j < VN + 1; ++j) {
+            int pos = 5 * (i * (VN + 1) + j);
+            vertices[pos + 0] = (i - VN / 2.0) * length / VN;
             vertices[pos + 1] = 0.0f;
-            vertices[pos + 2] = (j - N / 2.0) * length / N;
-            vertices[pos + 3] = (GLfloat)i / (GLfloat)(N + 1);
-            vertices[pos + 4] = (GLfloat)j / (GLfloat)(N + 1);
+            vertices[pos + 2] = (j - VN / 2.0) * length / VN;
+            vertices[pos + 3] = (GLfloat)i / (GLfloat)(VN + 1);
+            vertices[pos + 4] = (GLfloat)j / (GLfloat)(VN + 1);
         }
     }
 
@@ -126,8 +132,6 @@ void Ocean::CreateGridPlane()
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesNum * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-    GLint vertexLocation = glGetAttribLocation(oceanShader->ID, "aPos");
-    GLint texCoordsLocation = glGetAttribLocation(oceanShader->ID, "texCoords");
     glEnableVertexAttribArray(vertexLocation);
 	glVertexAttribPointer(vertexLocation, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(texCoordsLocation);
@@ -140,8 +144,9 @@ void Ocean::CreateGridPlane()
 
 GLboolean Ocean::Init()
 {
-	oceanShader = new Shader("./me/shader/terrain.vs", "./me/shader/terrain.frag");
-	GLint vertexLocation = glGetAttribLocation(oceanShader->ID, "aPos");
+	oceanShader = new Shader("./wave/shader/terrain.vs", "./wave/shader/terrain.frag");
+	vertexLocation = glGetAttribLocation(oceanShader->ID, "aPos");
+    texCoordsLocation = glGetAttribLocation(oceanShader->ID, "texCoords");
     CreateGridPlane();
 
 	GLfloat* h0Data;
@@ -156,11 +161,11 @@ GLboolean Ocean::Init()
 		steps++;
 	}
 	//声明更新海面网格的计算着色器
-	updateHtShader = new Shader("./me/shader/OceanUpdate.comp");
+	updateHtShader = new Shader("./wave/shader/OceanUpdate.comp");
 	//声明进行FFT的计算着色器
-	fftShader = new Shader("./me/shader/OceanFFT.comp");
+	fftShader = new Shader("./wave/shader/OceanFFT.comp");
 	//声明更新法线向量的计算着色器
-	updateNormalShader = new Shader("./me/shader/OceanUpdateNormal.comp");
+	updateNormalShader = new Shader("./wave/shader/OceanUpdateNormal.comp");
 
 	//h0Data存储波浪模型的初始值
 	h0Data = (GLfloat*)malloc((N + 1) * (N + 1) * 4 * sizeof(GLfloat));
@@ -418,9 +423,7 @@ GLboolean Ocean::Update(GLfloat time, glm::mat4 Model, glm::mat4 View, glm::mat4
     oceanShader->setVec3("viewPos", CamPos);
 	glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, 5 * sizeof(GLfloat) * (N + 1) * (N + 1), vertices);
-    GLint vertexLocation = glGetAttribLocation(oceanShader->ID, "aPos");
-    GLint texCoordsLocation = glGetAttribLocation(oceanShader->ID, "texCoords");
+    glBufferSubData(GL_ARRAY_BUFFER, 0, verticesNum * 5 * sizeof(float), vertices);
     glEnableVertexAttribArray(vertexLocation);
 	glVertexAttribPointer(vertexLocation, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(texCoordsLocation);

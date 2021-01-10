@@ -1,6 +1,6 @@
 #version 460 core
  
-#define N 2048
+#define N 1024
 #define LENGTH	256
 #define GRAVITY 9.81
 #define PI	3.1415926535897932384626433832795

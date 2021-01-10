@@ -23,7 +23,7 @@ vec3 sunPos=vec3(0,50,100);
 
 float CalculateFresnel (vec3 I, vec3 N)
 {
-    float _FresnelPower=5.0;
+    float _FresnelPower=10.0;
     float R_0 =0.04;
     //R_0 *= R_0;
     return  R_0 + (1.0 - R_0) * pow(1.0 - max(dot(I, N),0.0), _FresnelPower);

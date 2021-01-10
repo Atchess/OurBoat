@@ -20,11 +20,14 @@ private:
     glm::vec2 windDirection;
 
     GLint N;
-
+    GLint VN;
     
     GLfloat *vertices;                 // vertices for vertex buffer object
     GLfloat *vert;
     GLfloat *texCoords;
+    GLfloat *point;
+    GLfloat *dx;
+    GLfloat *dz;
     GLuint *indices;                  // indicies for vertex buffer object
     GLuint indicesNum;             // number of indices to render
     GLuint verticesNum;
@@ -32,6 +35,7 @@ private:
 
     GLuint textureH0, textureHt[3], textureNormal, textureIndices, texturePoint[2];  // store the result computed by compute shader
     GLuint textureHtSx[3], textureHtSz[3], textureHtDx[3], textureHtDz[3];
+    GLuint vertexLocation ,texCoordsLocation;
 
     Shader *oceanShader;
     Shader *updateHtShader, *fftShader, *updateNormalShader;

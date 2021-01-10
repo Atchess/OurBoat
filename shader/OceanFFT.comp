@@ -1,6 +1,6 @@
 #version 460 core
  
-#define N 2048
+#define N 1024
 #define PI	3.1415926535897932384626433832795
  
 uniform int processColumn;
@@ -14,7 +14,7 @@ layout (binding = 1, rg32f) uniform image2D imageOut;
 shared vec2 sharedStore[N];
  
 // as N = 512, so local size is 512/2 = 256. Processing two fields per invocation.
-layout (local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 512, local_size_y = 1, local_size_z = 1) in;
  
 //复数乘法
 vec2 mulc(vec2 a, vec2 b)

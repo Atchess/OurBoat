@@ -12,6 +12,8 @@
 #include "../include/carema.h"
 #include "../include/shader.h"
 #include "../include/Ocean.h"
+#include "../include/boat.h"
+#include "../include/Skybox.h"
 #include <vector>
 
 #define PI M_PI
@@ -34,14 +36,14 @@ const GLuint SCR_HEIGHT = 600;
 
 // camera
 Camera camera(glm::vec3(0.0f, 5.0f, 0.0f));
+boat Boat;
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = false;
-
+bool pause = false;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-
 
 int main()
 {
@@ -77,15 +79,28 @@ int main()
         return -1;
     }
 
-    // Setup some OpenGL options
-    glEnable(GL_MULTISAMPLE);
+    std::vector<std::string> skyboxPaths = {
+        "wave/textures/skybox/skyboxLeft.png",
+        "wave/textures/skybox/skyboxRight.png",
+        "wave/textures/skybox/skyboxUp.png",
+        "wave/textures/skybox/skyboxDown.png",
+        "wave/textures/skybox/skyboxFront.png",
+        "wave/textures/skybox/skyboxBack.png",
+    };
+
+    Shader skyboxShader("wave/shader/SkyboxShader.vs", "wave/shader/SkyboxShader.fs");
+    Skybox skybox(skyboxPaths);
+    Ocean ocean(1024, 0.00002, 256, glm::vec2(64, 32));
+    // Necessary OpenGL Parameters
     glEnable(GL_DEPTH_TEST);
-    //glDepthFunc(GL_LESS);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // Enable gamma correction
+    glEnable(GL_FRAMEBUFFER_SRGB);
+    // Enable anti-aliasing
+    glEnable(GL_MULTISAMPLE);
+    // Enable blending
     glEnable(GL_BLEND);
-
-    Ocean ocean(2048, 0.00002, 128, glm::vec2(64,32));
-
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    Boat.init();
 	glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -107,8 +122,14 @@ int main()
         view = camera.GetViewMatrix();
         projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         GLuint ReflectText;
-        ocean.Update(currentFrame/100, model, view, projection, CamPos, ReflectText);
-
+        skybox.Draw(skyboxShader, view, projection);
+        if (!pause) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            ocean.Update(currentFrame / 450, model, view, projection, CamPos, ReflectText);
+            Boat.Draw(view, projection, deltaTime);
+        } else {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -123,15 +144,53 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 }
 void processInput(GLFWwindow *window){
     if(glfwGetKey(window, GLFW_KEY_ESCAPE)==GLFW_PRESS)
-    glfwSetWindowShouldClose(window,true);
+        glfwSetWindowShouldClose(window,true);
     if(glfwGetKey(window, GLFW_KEY_W))
-    camera.processKeyboard(FORWARD, deltaTime);
+        camera.processKeyboard(FORWARD, deltaTime);
     if(glfwGetKey(window, GLFW_KEY_S))
-    camera.processKeyboard(BACKWARD, deltaTime);
+        camera.processKeyboard(BACKWARD, deltaTime);
     if(glfwGetKey(window, GLFW_KEY_A))
-    camera.processKeyboard(LEFT, deltaTime);
+        camera.processKeyboard(LEFT, deltaTime);
     if(glfwGetKey(window, GLFW_KEY_D))
-    camera.processKeyboard(RIGHT, deltaTime);
+        camera.processKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        Boat.ProcessKeyboard(GOFORWARD, deltaTime);
+        camera.processKeyboard(FORWARD, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        Boat.ProcessKeyboard(GOBACKWARD, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        Boat.ProcessKeyboard(TURNLEFT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        Boat.ProcessKeyboard(TURNRIGHT, deltaTime);
+    }
+    // Some mode switches
+    static bool isPolygon = false;
+    static double lastPressedTime = 0.0;
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS
+        && glfwGetTime() - lastPressedTime > 0.2) {
+        if (isPolygon) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            isPolygon = false;
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            isPolygon = true;
+        }
+        lastPressedTime = glfwGetTime();
+    }
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS
+        && glfwGetTime() - lastPressedTime > 0.2) {
+        //gDrawNormals = !gDrawNormals;
+        lastPressedTime = glfwGetTime();
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS
+        && glfwGetTime() - lastPressedTime > 0.2) {
+        pause = !pause;
+        lastPressedTime = glfwGetTime();
+    }
 }
 void mouse_pos_callback(GLFWwindow *window,double x,double y){
     if(!firstMouse){
@@ -150,45 +209,5 @@ void mouse_pos_callback(GLFWwindow *window,double x,double y){
 void mouse_scroll_callback(GLFWwindow *window,double x,double y){
     camera.ProcessMouseScroll(y);
 }
-// utility function for loading a 2D texture from file
-// ---------------------------------------------------
-/*
-GLuint loadTexture(char const * path)
-{
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-
-    int width, height, nrComponents;
-    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data)
-    {
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-
-    return textureID;
-}
-*/
 
 

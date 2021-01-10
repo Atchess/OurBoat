@@ -18,6 +18,9 @@ out vec3 FragPos;
 void main(){
 	//ivec2 storePos = ivec2(int(gl_GlobalInvocationID.x), int(gl_GlobalInvocationID.y));
     vec3 pos = texture(imagePoint, texCoords.xy).xyz;
+    //pos.x = pos.x * 10;
+    //pos.z = pos.z * 10;
+    //pos.y = pos.y * 2;
     vec3 normal = texture(imageNormal, texCoords.xy).xyz;
 
     aNormal = mat3(transpose(inverse(model))) * normal;
