@@ -6,6 +6,8 @@ in vec3 texCoord;
 
 uniform samplerCube skybox;
 
+uniform float lightIntensity;
+
 void main() {
-	fragColor = texture(skybox, texCoord);
+	fragColor = texture(skybox, texCoord) * lightIntensity;
 }

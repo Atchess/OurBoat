@@ -16,9 +16,14 @@ public:
 
     unsigned int getCubeMap() { return texture; }
 private:
+    GLfloat lightIntensity;
     unsigned int VAO, VBO, texture;
 
     unsigned int GenCubeMap(std::vector<std::string> facePaths);
+
+    GLfloat getLightIntensity();
+
+    void setLightIntensity(GLfloat intensity);
 };
 
 

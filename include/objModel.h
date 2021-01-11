@@ -27,11 +27,11 @@ public:
 	void draw(Shader& shader, glm::mat4 model, glm::mat4 view, glm::mat4 projection);
 	GLfloat getEdgePoint(int k);
 	glm::vec3 getCenter();
-	float getXMax();
-	float getXMin();
-	float getYMax();
-	float getYMin();
-	float getZMax();
-	float getZMin();
+	glm::vec3 getXMax();
+	glm::vec3 getXMin();
+	glm::vec3 getYMax();
+	glm::vec3 getYMin();
+	glm::vec3 getZMax();
+	glm::vec3 getZMin();
 };
 

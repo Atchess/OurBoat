@@ -33,6 +33,9 @@ private:
     GLuint verticesNum;
     GLuint VAO, VBO, EBO, TBO, FBO;             // vertex buffer objects
 
+    glm::vec3 lightPos;
+    GLfloat lightIntensity;
+
     GLuint textureH0, textureHt[3], textureNormal, textureIndices, texturePoint[2];  // store the result computed by compute shader
     GLuint textureHtSx[3], textureHtSz[3], textureHtDx[3], textureHtDz[3];
     GLuint vertexLocation ,texCoordsLocation;
@@ -44,16 +47,23 @@ private:
     glm::vec3 deepWaterColorSunny = glm::vec3(powf(0.11f, 2.2f),
                                          powf(0.18f, 2.2f),
                                          powf(0.35f, 2.2f));
+    
 public:
     Ocean(GLfloat N, GLfloat A, GLfloat length, vec2 windDirection);
     ~Ocean();
     void FourierButterflyShuffleFFTi(GLint* src, GLint N);
     GLfloat PhillipsSpectrum(GLfloat A, GLfloat length, glm::vec2 waveDirection, glm::vec2 windDirection);
     GLfloat PhillipsSpectrum(int n, int m);
+    GLfloat* getVertices();
     void CreateGridPlane();
     GLboolean Init();
-    GLboolean Update(GLfloat time, glm::mat4 Model, glm::mat4 View, glm::mat4 Perspective, glm::vec3 CamPos, GLuint ReflectText);
+    GLboolean Update(GLfloat time, glm::mat4 Model, glm::mat4 ModelInv, glm::mat4 View, glm::mat4 Perspective, glm::vec3 CamPos, GLuint ReflectText);
     void release();
+
+    GLfloat getLightIntensity();
+    void setLightIntensity(GLfloat intensity);
+    glm::vec3 getLightPos();
+    void setLightPos(glm::vec3 pos);
 };
 
 #endif

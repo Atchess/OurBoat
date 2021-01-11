@@ -6,13 +6,16 @@ layout (location = 1) in vec2 texCoords;
 
 layout (binding = 0) uniform sampler2D imagePoint;
 layout (binding = 1) uniform sampler2D imageNormal;
+layout (binding = 2) uniform samplerCube skybox;
 
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
+uniform mat4 modelInv;
+
 out float Height;
-out vec3 aNormal;
+out vec3 Normal;
 out vec3 FragPos;
 
 void main(){
@@ -23,7 +26,7 @@ void main(){
     //pos.y = pos.y * 2;
     vec3 normal = texture(imageNormal, texCoords.xy).xyz;
 
-    aNormal = mat3(transpose(inverse(model))) * normal;
+    Normal = mat3(modelInv) * normal;
     Height = vec3(model * vec4( pos, 1.0f)).y;
     FragPos = vec3(model * vec4( pos, 1.0f));
     gl_Position = projection * view * model * vec4(pos, 1.0f);

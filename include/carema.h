@@ -17,6 +17,8 @@ const float YAW=0,PITCH=0,SPEED=5,SENSITIVITY=0.1,ZOOM=45;
 class Camera{
 public:
     glm::vec3 Position,Front,Right,WorldUp;
+    glm::vec3 distance = glm::vec3(0.0f);
+    float tolerableDis = 5.0f; 
     float Yaw,Pitch,MovementSpeed,MouseSensitivity,Zoom;
     
     Camera(glm::vec3 position=glm::vec3(0.0f,3.0f,3.0f),glm::vec3 up=glm::vec3(0.0f,1.0f,0.0f),
@@ -70,6 +72,18 @@ public:
             Zoom = 5.0f;
         if (Zoom >= 70.0f)
             Zoom = 70.0f;
+    }
+
+    void goWithBoat (glm::vec3 offset, glm::vec3 BoatFront, glm::vec3 BoatRight) {
+        distance += offset;
+        if (abs(offset.x) > 0) {
+            Position += glm::normalize(BoatFront) * offset.x; //((distance.x / abs(distance.x)) * (abs(distance.x) - tolerableDis));
+            distance.x -= (distance.x / abs(distance.x)) * (abs(distance.x) - tolerableDis);
+        }
+        if (abs(distance.z) > 0) {
+            Position += glm::normalize(glm::cross(BoatFront, glm::vec3(0, 1, 0))) * offset.z;//BoatRight * ((distance.z / abs(distance.z)) * (abs(distance.z) - tolerableDis));
+            distance.z -= (distance.z / abs(distance.z)) * (abs(distance.z) - tolerableDis);
+        }
     }
     
 private:

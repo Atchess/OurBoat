@@ -7,7 +7,7 @@
 using namespace std;
 void loadTexture(const char* textureFileName, unsigned int& texture);
 objModel::objModel(const char* objFileName, const char* textureFileName,float factor) {
-    //ï¿½ï¿½ï¿½È½ï¿½objï¿½Ä¼ï¿½×ªï¿½ï¿½Îªï¿½ã¼¯
+    //Ê×ÏÈ½«objÎÄ¼þ×ª»¯Îªµã¼¯
     FILE* file = fopen(objFileName, "r");
     if (file == NULL) {
         cout << "Failed to open the obj file!" << endl;
@@ -55,13 +55,13 @@ objModel::objModel(const char* objFileName, const char* textureFileName,float fa
                 z_min = final_vertices.size() - 1;
             }
         }
-        //ï¿½ï¿½ï¿½ï¿½
+        //ÎÆÀí
         else if (strcmp(lineHeader, "vt") == 0) {
             fscanf(file, "%f %f\n", &x, &y);
             final_textures.push_back(x);
             final_textures.push_back(1.0-y);
         }
-        //ï¿½ï¿½ï¿½Ú»æ»­ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ë«ï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½Ô²ï¿½ï¿½Ãµï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½
+        //ÓÉÓÚ»æ»­µÄÊ±ºòÊÇË«Ãæ»æÖÆ£¬ËùÒÔ²»ÓÃµ£ÐÄ·¨ÏòÁ¿
         else if (strcmp(lineHeader, "vn") == 0) {
             fscanf(file, "%f %f %f\n", &x, &y, &z);
             final_normals.push_back(x*factor);
@@ -73,7 +73,7 @@ objModel::objModel(const char* objFileName, const char* textureFileName,float fa
                 &vertexIndex[0], &textureIndex[0], &normalIndex[0],
                 &vertexIndex[1], &textureIndex[1], &normalIndex[1],
                 &vertexIndex[2], &textureIndex[2], &normalIndex[2]);
-            //ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½objï¿½Ä¼ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½Ä¶ï¿½ï¿½ë³¬ï¿½ï¿½9ï¿½ï¿½
+            //ÒòÎª¶ÁÈëµÄobjÎÄ¼þÒÑ¾­½øÐÐÁËÈý½Ç»¯²Ù×÷£¬²»±Øµ£ÐÄ¶ÁÈë³¬¹ý9¸ö
             if (matches == 9) {
                 //triangle
                 vertexIndices.push_back(vertexIndex[0] - 1);
@@ -98,12 +98,12 @@ objModel::objModel(const char* objFileName, const char* textureFileName,float fa
         }
     }
 
-    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äµï¿½
+    //¼ÆËãÖÐÐÄµã
     center.x = (minx + maxx) / 2;
     center.y = (miny + maxy) / 2;
     center.z = (minz + maxz) / 2;
 
-    //ï¿½ï¿½Ã¿Ò»ï¿½ï¿½ï¿½ï¿½Ö³ï¿½ x y z position ï¿½ï¿½  x y texture
+    //°ÑÃ¿Ò»¸öµã·Ö³É x y z position ºÍ  x y texture
     for (int i = 0; i < vertexIndices.size(); i++) {
         vertexAndTextures.push_back(i);
         final_verticesTextures.push_back(final_vertices[3 * vertexIndices[i]]);
@@ -113,11 +113,11 @@ objModel::objModel(const char* objFileName, const char* textureFileName,float fa
         final_verticesTextures.push_back(final_textures[2 * textureIndices[i] + 1]);
     }
 
-    //ï¿½ï¿½Î½ï¿½ï¿½Ðµã¼¯ï¿½ó¶¨£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    //Æä´Î½øÐÐµã¼¯°ó¶¨£¬ÎÆÀí°ó¶¨
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½ï¿½ï¿½Ç°Ä¬ï¿½ÏµÄ»ï¿½ï¿½ï¿½ï¿½ï¿½
+    // ½«¶¥µãÊý¾Ý°ó¶¨ÖÁµ±Ç°Ä¬ÈÏµÄ»º³åÖÐ
     glBufferData(GL_ARRAY_BUFFER, final_verticesTextures.size() * sizeof(GLfloat), &final_verticesTextures[0], GL_STATIC_DRAW);
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -126,15 +126,15 @@ objModel::objModel(const char* objFileName, const char* textureFileName,float fa
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexAndTextures.size() * sizeof(unsigned int), &vertexAndTextures[0], GL_STATIC_DRAW);
 
-    // ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
+    // ÉèÖÃ¶¥µãÊôÐÔÖ¸Õë
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(0);
 
-    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
+    // ÎÆÀíµØÖ·
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(sizeof(GLfloat)* 3));
     glEnableVertexAttribArray(1);
 
-    // ï¿½ï¿½ï¿½VAOï¿½ï¿½VBO
+    // ½â°óVAOºÍVBO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -164,8 +164,8 @@ void loadTexture(const char* textureFileName, unsigned int& texture){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    int width, height, nrchannels;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½
+    //¼ÓÔØÎÆÀí
+    int width, height, nrchannels;//ÎÆÀí³¤¿í£¬Í¨µÀÊý
     stbi_set_flip_vertically_on_load(true);
     unsigned char* data = stbi_load(textureFileName, &width, &height, &nrchannels, 0);
     if (data) {
@@ -175,21 +175,21 @@ void loadTexture(const char* textureFileName, unsigned int& texture){
     else {
         std::cout << "Failed to load texture" << std::endl;
     }
-    stbi_image_free(data);//ï¿½Í·ï¿½ï¿½ï¿½Ô´
+    stbi_image_free(data);//ÊÍ·Å×ÊÔ´
 }
 GLfloat objModel::getEdgePoint(int k) {
     switch (k) {
-    case 0://ï¿½ï¿½Ð¡x
+    case 0://×îÐ¡x
         return final_vertices[x_min];
-    case 1://ï¿½ï¿½ï¿½x
+    case 1://×î´óx
         return final_vertices[x_max];
-    case 2://ï¿½ï¿½Ð¡y
+    case 2://×îÐ¡y
         return final_vertices[y_min];
-    case 3://ï¿½ï¿½ï¿½y
+    case 3://×î´óy
         return final_vertices[y_max];
-    case 4://ï¿½ï¿½Ð¡z
+    case 4://×îÐ¡z
         return final_vertices[z_min];
-    case 5://ï¿½ï¿½ï¿½z
+    case 5://×î´óz
         return final_vertices[z_max];
     default:
         cout << "error input!" << endl;
@@ -199,21 +199,21 @@ GLfloat objModel::getEdgePoint(int k) {
 glm::vec3 objModel::getCenter() {
     return center;
 }
-float objModel::getXMax() {
-    return final_vertices[x_max];
+glm::vec3 objModel::getXMax() {
+    return glm::vec3(final_vertices[x_max], final_vertices[x_max + 1.0], final_vertices[x_max + 2.0]);
 }
-float objModel::getXMin() {
-    return final_vertices[x_min];
+glm::vec3 objModel::getXMin() {
+    return glm::vec3(final_vertices[x_min], final_vertices[x_min + 1.0], final_vertices[x_min + 2.0]);
 }
-float objModel::getYMax() {
-    return final_vertices[y_max];
+glm::vec3 objModel::getYMax() {
+    return glm::vec3(final_vertices[y_max - 1.0], final_vertices[y_max], final_vertices[y_max + 1.0]);
 }
-float objModel::getYMin() {
-    return final_vertices[y_min];
+glm::vec3 objModel::getYMin() {
+    return glm::vec3(final_vertices[y_min - 1.0], final_vertices[y_min], final_vertices[y_min + 1.0]);
 }
-float objModel::getZMax() {
-    return final_vertices[z_max];
+glm::vec3 objModel::getZMax() {
+    return glm::vec3(final_vertices[z_max - 2.0], final_vertices[z_max - 1.0], final_vertices[z_max]);
 }
-float objModel::getZMin() {
-    return final_vertices[z_min];
+glm::vec3 objModel::getZMin() {
+    return glm::vec3(final_vertices[z_min - 2.0], final_vertices[z_min - 1.0], final_vertices[z_min]);
 }

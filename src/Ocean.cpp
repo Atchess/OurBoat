@@ -76,6 +76,7 @@ void Ocean::CreateGridPlane()
 	verticesNum = (N + 1) * (N + 1);
     vert = new GLfloat[verticesNum * 4];
 	texCoords = new GLfloat[verticesNum * 2];
+	point = new GLfloat[verticesNum * 4];
     
     verticesNum = (VN + 1) * (VN + 1);
     indicesNum  = 6 * (VN + 1) * (VN + 1);
@@ -84,8 +85,8 @@ void Ocean::CreateGridPlane()
 	indices  = new GLuint[indicesNum];
     indicesNum = 0;
 
-    for (unsigned int i = 0; i < VN; ++i) {
-        for (unsigned int j = 0; j < VN; ++j) {
+    for (unsigned int i = 0; i < VN + 1; ++i) {
+        for (unsigned int j = 0; j < VN + 1; ++j) {
             int index = i * (VN + 1) + j;
             indices[indicesNum ++] = index;
             indices[indicesNum ++] = index + VN + 1;
@@ -101,8 +102,8 @@ void Ocean::CreateGridPlane()
             vertices[pos + 0] = (i - VN / 2.0) * length / VN;
             vertices[pos + 1] = 0.0f;
             vertices[pos + 2] = (j - VN / 2.0) * length / VN;
-            vertices[pos + 3] = (GLfloat)i / (GLfloat)(VN + 1);
-            vertices[pos + 4] = (GLfloat)j / (GLfloat)(VN + 1);
+            vertices[pos + 3] = (GLfloat)i / (GLfloat)(VN);
+            vertices[pos + 4] = (GLfloat)j / (GLfloat)(VN);
         }
     }
 
@@ -144,7 +145,11 @@ void Ocean::CreateGridPlane()
 
 GLboolean Ocean::Init()
 {
-	oceanShader = new Shader("./wave/shader/terrain.vs", "./wave/shader/terrain.frag");
+	lightIntensity = 1.0;
+	lightPos = glm::vec3(-100.0f, 100.0f, -100.0f);
+
+	//oceanShader = new Shader("./wave/shader/terrain.vs", "./wave/shader/terrain.frag");
+	oceanShader = new Shader("./wave/shader/water.vs", "./wave/shader/water.fs");
 	vertexLocation = glGetAttribLocation(oceanShader->ID, "aPos");
     texCoordsLocation = glGetAttribLocation(oceanShader->ID, "texCoords");
     CreateGridPlane();
@@ -296,7 +301,7 @@ GLboolean Ocean::Init()
 	return GL_TRUE;
 }
  
-GLboolean Ocean::Update(GLfloat time, glm::mat4 Model, glm::mat4 View, glm::mat4 Projection, glm::vec3 CamPos, GLuint ReflectText)
+GLboolean Ocean::Update(GLfloat time, glm::mat4 Model, glm::mat4 ModelInv, glm::mat4 View, glm::mat4 Projection, glm::vec3 CamPos, GLuint ReflectText)
 {
 	
 	static GLfloat totalTime = 0.0f;
@@ -410,17 +415,31 @@ GLboolean Ocean::Update(GLfloat time, glm::mat4 Model, glm::mat4 View, glm::mat4
 	glDispatchCompute(N, N, 1);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-	//GLfloat data[(N + 1) * (N + 1) * 4];
+	// 传出水面数据
+	glBindTexture(GL_TEXTURE_2D, texturePoint[1]);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, point);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	//GLfloat *data  = new GLfloat[(N + 1) * (N + 1) * 4];
 	//glBindTexture(GL_TEXTURE_2D, texturePoint[1]);
 	//glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, data);
 	//glBindTexture(GL_TEXTURE_2D, 0);
 
+	//Model = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
  	oceanShader->use();
-    oceanShader->setFloat("hei_Lim", A);
 	oceanShader->setMat4("model", Model);
     oceanShader->setMat4("view", View);
     oceanShader->setMat4("projection", Projection);
     oceanShader->setVec3("viewPos", CamPos);
+	oceanShader->setMat4("modelInv", ModelInv);
+
+    oceanShader->setVec3("lightDir", glm::vec3(1.0f, -1.0f, 1.0f));
+    oceanShader->setVec3("lightPos", lightPos);
+    oceanShader->setVec3("diffuse", deepWaterColorSunny);
+    oceanShader->setVec3("ambient", deepWaterColorSunny);
+    oceanShader->setVec3("specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+
 	glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, verticesNum * 5 * sizeof(float), vertices);
@@ -434,6 +453,8 @@ GLboolean Ocean::Update(GLfloat time, glm::mat4 Model, glm::mat4 View, glm::mat4
 	//将法线贴图绑定在GL_TEXTURE1
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, textureNormal);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, ReflectText);
  
 	//glActiveTexture(GL_TEXTURE2);
 	//glBindTexture(GL_TEXTURE_2D, ReflectText);
@@ -449,4 +470,30 @@ GLboolean Ocean::Update(GLfloat time, glm::mat4 Model, glm::mat4 View, glm::mat4
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 	totalTime += time;
 	return GL_TRUE;
+}
+
+
+GLfloat* Ocean::getVertices() 
+{
+	return point;
+}
+
+GLfloat Ocean::getLightIntensity()
+{
+	return lightIntensity;
+}
+
+void Ocean::setLightIntensity(GLfloat intensity)
+{
+	lightIntensity = intensity;
+}
+
+glm::vec3 Ocean::getLightPos()
+{
+	return lightPos;
+}
+
+void Ocean::setLightPos(glm::vec3 pos)
+{
+	lightPos = pos;
 }
