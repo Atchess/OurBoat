@@ -1,0 +1,89 @@
+#version 460 core
+ 
+#define N 1024
+#define LENGTH	256.0
+
+#define LAMBDA -0.05
+
+#define STRIDE 0.1
+
+#define xzScale 1
+#define yScale 1
+ 
+#define VERTEX_STEP (LENGTH / float(N - 1))
+#define DIAGONAL_VERTEX_STEP sqrt(VERTEX_STEP * VERTEX_STEP * 2.0)
+ 
+layout (binding = 0, rg32f) uniform image2D imageInHt; 
+layout (binding = 1, rg32f) uniform image2D imageInHtSx; 
+layout (binding = 2, rg32f) uniform image2D imageInHtSz; 
+layout (binding = 3, rg32f) uniform image2D imageInHtDx; 
+layout (binding = 4, rg32f) uniform image2D imageInHtDz; 
+layout (binding = 5, rgba32f) uniform image2D imageInPoint;
+layout (binding = 6, rgba32f) uniform image2D imageOutPoint;
+layout (binding = 7, rgba32f) uniform image2D imageOutNormal;
+ 
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+int signs[2] = {1, -1};
+
+
+void main()
+{
+	ivec2 storePos = ivec2(int(gl_GlobalInvocationID.x), int(gl_GlobalInvocationID.y));
+
+	int sign = signs[(storePos.x + storePos.y) & 1];
+
+	vec2 ht = imageLoad(imageInHt, storePos).xy;
+	ht = ht * sign;
+
+	vec4 point; //= imageLoad(imageOutPoint, storePos).xyzw;
+	vec4 oPoint = imageLoad(imageInPoint, storePos).xyzw;
+
+	// height
+	point.y = ht.x * STRIDE * yScale;
+
+	vec2 ht_dx = imageLoad(imageInHtDx, storePos).xy * sign;
+	vec2 ht_dz = imageLoad(imageInHtDz, storePos).xy * sign;
+
+	point.x = (oPoint.x + ht_dx.x * LAMBDA) * STRIDE * xzScale;
+	point.z = (oPoint.z + ht_dz.x * LAMBDA) * STRIDE * xzScale;
+
+	vec2 ht_sx = imageLoad(imageInHtSx, storePos).xy * sign;
+	vec2 ht_sz = imageLoad(imageInHtSz, storePos).xy * sign;
+	
+	vec3 normal = normalize(vec3(0.0 - ht_sx.x, 1.0, 0.0 - ht_sz.x));
+
+	//if (storePos.x == 0 && storePos.y == 0) {
+	//	ivec2 pos = ivec2(N, N);
+	//	vec4 xypoint;
+	//	vec4 oxypoint = imageLoad(imageInPoint, pos).xyzw;
+	//	xypoint.y = ht.x * STRIDE * yScale;
+	//	xypoint.x = (oxypoint.x + ht_dx.x * LAMBDA) * STRIDE * xzScale;
+	//	xypoint.z = (oxypoint.z + ht_dz.x * LAMBDA) * STRIDE * xzScale;
+	//	imageStore(imageOutPoint, pos, xypoint);
+	//	imageStore(imageOutNormal, pos, vec4(normal, 0.0));		
+	//}
+	//if (storePos.y == 0) {
+	//	ivec2 pos = ivec2(storePos.x, N);
+	//	vec4 xypoint;
+	//	vec4 oxypoint = imageLoad(imageInPoint, pos).xyzw;
+	//	xypoint.y = ht.x * STRIDE * yScale;
+	//	xypoint.x = (oxypoint.x + ht_dx.x * LAMBDA) * STRIDE * xzScale;
+	//	xypoint.z = (oxypoint.z + ht_dz.x * LAMBDA) * STRIDE * xzScale;
+	//	imageStore(imageOutPoint, pos, xypoint);
+	//	imageStore(imageOutNormal, pos, vec4(normal, 0.0));			
+	//}
+	//if (storePos.x == 0) {
+	//	ivec2 pos = ivec2(N, storePos.y);
+	//	vec4 xypoint;
+	//	vec4 oxypoint = imageLoad(imageInPoint, pos).xyzw;
+	//	xypoint.y = ht.x * STRIDE * yScale;
+	//	xypoint.x = (oxypoint.x + ht_dx.x * LAMBDA) * STRIDE * xzScale;
+	//	xypoint.z = (oxypoint.z + ht_dz.x * LAMBDA) * STRIDE * xzScale;
+	//	imageStore(imageOutPoint, pos, xypoint);
+	//	imageStore(imageOutNormal, pos, vec4(normal, 0.0));	
+	//}
+
+	imageStore(imageOutPoint, storePos, point);
+	imageStore(imageOutNormal, storePos, vec4(normal, 0.0));
+}
